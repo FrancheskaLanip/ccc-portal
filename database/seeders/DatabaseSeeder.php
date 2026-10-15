@@ -25,9 +25,21 @@ class DatabaseSeeder extends Seeder
             'role' => 'registrar',
         ]);
 
+        User::forceCreate([
+            'name' => 'Faculty',
+            'email' => 'faculty@ccc.test',
+            'password' => Hash::make('password'),
+            'role' => 'faculty',
+        ]);
+
         Program::create([
-            'code' => 'BSIT',
-            'name' => 'Bachelor of Science in Information Technology',
+            'code' => 'BSPA',
+            'name' => 'Bachelor of Science in Public Administration',
+        ]);
+
+        Program::create([
+            'code' => 'BSM',
+            'name' => 'Bachelor of Science in Midwifery',
         ]);
     }
 }

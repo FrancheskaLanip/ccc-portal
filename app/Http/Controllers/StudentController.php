@@ -38,7 +38,7 @@ class StudentController extends Controller
             'last_name' => ['required', 'string', 'max:100'],
             'year_level' => ['required', 'integer', 'between:1,6'],
             'contact_number' => ['nullable', 'regex:/^[0-9+\-\s]{7,20}$/'],
-            'enrollment_status' => ['required', Rule::in(['Enrolled', 'Not Enrolled'])],
+            'enrollment_status' => ['required', Rule::in(['Not Enrolled', 'Pending', 'Enrolled'])],
         ]);
 
         // Create the login account and the student record together, or neither
@@ -72,7 +72,7 @@ class StudentController extends Controller
             'last_name' => ['required', 'string', 'max:100'],
             'year_level' => ['required', 'integer', 'between:1,6'],
             'contact_number' => ['nullable', 'regex:/^[0-9+\-\s]{7,20}$/'],
-            'enrollment_status' => ['required', Rule::in(['Enrolled', 'Not Enrolled'])],
+            'enrollment_status' => ['required', Rule::in(['Not Enrolled', 'Pending', 'Enrolled'])],
         ]);
 
         $student->update($data);
@@ -87,5 +87,13 @@ class StudentController extends Controller
         $student->user->delete();
 
         return redirect()->route('students.index')->with('success', 'Student deleted.');
+    }
+
+    // Registrar confirms a student's enrollment
+    public function enroll(Student $student)
+    {
+        $student->update(['enrollment_status' => 'Enrolled']);
+
+        return back()->with('success', 'Student officially enrolled.');
     }
 }

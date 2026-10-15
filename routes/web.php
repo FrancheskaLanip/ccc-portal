@@ -24,8 +24,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', fn () => view('admin'))
         ->middleware('role:admin')->name('admin');
 
+    Route::get('/faculty', fn () => view('faculty'))
+        ->middleware('role:faculty')->name('faculty');
+
     Route::middleware('role:admin,registrar')->group(function () {
         Route::resource('programs', ProgramController::class)->except('show');
         Route::resource('students', StudentController::class)->except('show');
+        Route::patch('/students/{student}/enroll', [StudentController::class, 'enroll'])->name('students.enroll');
     });
 });

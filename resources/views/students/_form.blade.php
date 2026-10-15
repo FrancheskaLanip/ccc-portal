@@ -35,7 +35,7 @@
 
 <label>Status
     <select name="enrollment_status">
-        @foreach (['Not Enrolled', 'Enrolled'] as $status)
+        @foreach (['Not Enrolled', 'Pending', 'Enrolled'] as $status)
             <option value="{{ $status }}" @selected(old('enrollment_status', $student->enrollment_status ?? 'Not Enrolled') === $status)>
                 {{ $status }}
             </option>
