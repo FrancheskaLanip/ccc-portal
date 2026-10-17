@@ -8,8 +8,7 @@
         <tr>
             <th>Student no.</th>
             <th>Name</th>
-            <th>Program</th>
-            <th>Year</th>
+            <th>Class</th>
             <th>Status</th>
             <th>Actions</th>
         </tr>
@@ -17,8 +16,7 @@
             <tr>
                 <td>{{ $student->student_number }}</td>
                 <td>{{ $student->last_name }}, {{ $student->first_name }}</td>
-                <td>{{ $student->program->code }}</td>
-                <td>{{ $student->year_level }}</td>
+                <td>{{ $student->program->code }} {{ $student->year_level }}{{ $student->section ? '-' . $student->section : '' }}</td>
                 <td>{{ $student->enrollment_status }}</td>
                 <td>
                     <a href="{{ route('students.edit', $student) }}">Edit</a>
@@ -41,7 +39,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="6">No students yet.</td>
+                <td colspan="5">No students yet.</td>
             </tr>
         @endforelse
     </table>

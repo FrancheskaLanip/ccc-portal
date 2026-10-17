@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Program;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\Credentials;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -31,29 +32,37 @@ class StudentController extends Controller
     {
         $data = $request->validate([
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
             'program_id' => ['required', 'exists:programs,id'],
             'student_number' => ['required', 'string', 'max:50', 'unique:students,student_number'],
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'year_level' => ['required', 'integer', 'between:1,6'],
+            'section' => ['nullable', 'string', 'max:10'],
             'contact_number' => ['nullable', 'regex:/^[0-9+\-\s]{7,20}$/'],
             'enrollment_status' => ['required', Rule::in(['Not Enrolled', 'Pending', 'Enrolled'])],
         ]);
 
+        $password = Credentials::generatePassword();
+
         // Create the login account and the student record together, or neither
-        DB::transaction(function () use ($data) {
+        $user = DB::transaction(function () use ($data, $password) {
             $user = new User();
             $user->name = $data['first_name'] . ' ' . $data['last_name'];
             $user->email = $data['email'];
-            $user->password = Hash::make($data['password']);
-            $user->role = 'student';
+            $user->password = Hash::make($password);
+            $user->role = 'student'; // set in code, never from the form
             $user->save();
 
-            $user->student()->create(Arr::except($data, ['email', 'password']));
+            $user->student()->create(Arr::except($data, ['email']));
+
+            return $user;
         });
 
-        return redirect()->route('students.index')->with('success', 'Student added.');
+        // Email the student number and password to the student
+        Credentials::send($user, $data['student_number'], $password);
+
+        return redirect()->route('students.index')
+            ->with('success', 'Student added. Login credentials were emailed to the student.');
     }
 
     public function edit(Student $student)
@@ -71,6 +80,7 @@ class StudentController extends Controller
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'year_level' => ['required', 'integer', 'between:1,6'],
+            'section' => ['nullable', 'string', 'max:10'],
             'contact_number' => ['nullable', 'regex:/^[0-9+\-\s]{7,20}$/'],
             'enrollment_status' => ['required', Rule::in(['Not Enrolled', 'Pending', 'Enrolled'])],
         ]);

@@ -12,6 +12,10 @@
 
     <h2>{{ ucfirst($portal) }} login</h2>
 
+    @if (session('success'))
+        <p style="color:green">{{ session('success') }}</p>
+    @endif
+
     @if ($errors->any())
         <ul style="color:red">
             @foreach ($errors->all() as $error)
@@ -23,13 +27,17 @@
     <form method="POST" action="{{ route('login') }}">
         @csrf
         <input type="hidden" name="portal" value="{{ $portal }}">
-        <label>Email <input type="email" name="email" value="{{ old('email') }}" required></label><br>
+
+        @if ($portal === 'student')
+            <label>Student number <input type="text" name="login" value="{{ old('login') }}" required></label><br>
+        @else
+            <label>Email <input type="email" name="login" value="{{ old('login') }}" required></label><br>
+        @endif
+
         <label>Password <input type="password" name="password" required></label><br>
         <button type="submit">Login</button>
     </form>
 
-    @if ($portal === 'student')
-        <p>No account? <a href="{{ route('register') }}">Register</a></p>
-    @endif
+    <p><a href="{{ route('password.request') }}">Forgot password?</a></p>
 </body>
 </html>

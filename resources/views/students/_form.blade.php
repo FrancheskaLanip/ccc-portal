@@ -1,8 +1,9 @@
 @csrf
 
 @unless (isset($student))
-    <label>Email <input type="email" name="email" value="{{ old('email') }}" required></label><br>
-    <label>Initial password <input type="password" name="password" required></label><br>
+    <label>Email (credentials will be sent here)
+        <input type="email" name="email" value="{{ old('email') }}" required>
+    </label><br>
 @endunless
 
 <label>Student number
@@ -28,6 +29,9 @@
 
 <label>Year level
     <input type="number" name="year_level" min="1" max="6" value="{{ old('year_level', $student->year_level ?? '') }}" required>
+</label><br>
+<label>Section
+    <input type="text" name="section" maxlength="10" value="{{ old('section', $student->section ?? '') }}" placeholder="A">
 </label><br>
 <label>Contact number
     <input type="text" name="contact_number" value="{{ old('contact_number', $student->contact_number ?? '') }}">

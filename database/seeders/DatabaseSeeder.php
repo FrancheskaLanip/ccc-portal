@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             'role' => 'faculty',
         ]);
 
-        Program::create([
+        $bspa = Program::create([
             'code' => 'BSPA',
             'name' => 'Bachelor of Science in Public Administration',
         ]);
@@ -40,6 +40,24 @@ class DatabaseSeeder extends Seeder
         Program::create([
             'code' => 'BSM',
             'name' => 'Bachelor of Science in Midwifery',
+        ]);
+
+        // Test student (logs in with the student number)
+        $studentUser = User::forceCreate([
+            'name' => 'Juan Dela Cruz',
+            'email' => 'student@ccc.test',
+            'password' => Hash::make('password'),
+            'role' => 'student',
+        ]);
+
+        $studentUser->student()->create([
+            'program_id' => $bspa->id,
+            'student_number' => '2026-0001',
+            'first_name' => 'Juan',
+            'last_name' => 'Dela Cruz',
+            'year_level' => 1,
+            'section' => 'A',
+            'enrollment_status' => 'Enrolled',
         ]);
     }
 }
