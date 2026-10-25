@@ -6,6 +6,7 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Support\Rls;
 
 // CONTROLLER (web version): handles login and logout for the Blade pages.
 class AuthController extends Controller
@@ -40,7 +41,7 @@ class AuthController extends Controller
         // Students log in with their student number, everyone else with email
         if ($request->portal === 'student') {
             // Find the student, then use the email of their user account
-            $student = Student::with('user')->where('student_number', $request->login)->first();
+            $student = Rls::asSystem(fn () => Student::with('user')->where('student_number', $request->login)->first());
             $email = $student?->user?->email;
         } else {
             $email = $request->login;

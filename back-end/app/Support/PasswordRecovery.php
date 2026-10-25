@@ -20,7 +20,7 @@ class PasswordRecovery
     public static function request(string $email): void
     {
         // Find the account (with its student record, if any)
-        $user = User::with('student')->where('email', $email)->first();
+        $user = Rls::asSystem(fn () => User::with('student')->where('email', $email)->first());
 
         if (! $user) {
             return; // same response either way, so nobody can test which emails exist
