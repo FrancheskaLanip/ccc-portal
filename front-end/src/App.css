@@ -1,0 +1,8 @@
+/* App-level overrides only. All portal styles live in index.css.
+   The old Vite template rules (.counter, .hero .base/.framework/.vite,
+   #center, #next-steps, #docs, #spacer, .ticks) were removed because they
+   clashed with the portal's .hero and logo styles. */
+
+#root {
+  min-height: 100vh;
+}
