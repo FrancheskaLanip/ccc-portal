@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use App\Support\Rls;
 
 // CONTROLLER (API version): login, logout and passwords for the React site.
 // It answers with JSON instead of HTML pages.
@@ -36,7 +37,7 @@ class AuthController extends Controller
 
         // Students log in with their student number, everyone else with email
         $email = $request->portal === 'student'
-            ? Student::with('user')->where('student_number', $request->login)->first()?->user?->email
+            ? Rls::asSystem(fn () => Student::with('user')->where('student_number', $request->login)->first()?->user?->email)
             : $request->login;
 
         // Unknown login or wrong password -> same error message for both
