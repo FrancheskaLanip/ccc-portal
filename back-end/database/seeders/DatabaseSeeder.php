@@ -12,12 +12,15 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // forceCreate skips mass-assignment protection, so we can set the role here
+        // forceCreate skips mass-assignment protection, so we can set the role here.
+        // credentials_sent_at is also set on every test account: their password is already
+        // known, so the first "Forgot password" sends a 6-digit code instead of new credentials.
         User::forceCreate([
             'name' => 'Admin',
             'email' => 'admin@ccc.test',
             'password' => Hash::make('password'),   // test password is "password"
             'role' => 'admin',
+            'credentials_sent_at' => now(),
         ]);
 
         User::forceCreate([
@@ -25,6 +28,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'registrar@ccc.test',
             'password' => Hash::make('password'),
             'role' => 'registrar',
+            'credentials_sent_at' => now(),
         ]);
 
         User::forceCreate([
@@ -32,6 +36,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'faculty@ccc.test',
             'password' => Hash::make('password'),
             'role' => 'faculty',
+            'credentials_sent_at' => now(),
         ]);
 
         // Two sample programs
@@ -51,6 +56,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'student@ccc.test',
             'password' => Hash::make('password'),
             'role' => 'student',
+            'credentials_sent_at' => now(),
         ]);
 
         // Create the student record linked to this account (user_id is filled in automatically)
