@@ -100,7 +100,7 @@ function StaffDashboard({ role }) {
   );
 }
 
-function StudentDashboard() {
+function StudentDashboard({ user }) {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -130,6 +130,10 @@ function StudentDashboard() {
             <dd>
               {student.last_name}, {student.first_name}
             </dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{user.email || "-"}</dd>
           </div>
           <div>
             <dt>Program</dt>
@@ -203,7 +207,7 @@ export default function Dashboard() {
       {message && <div className="success">{message}</div>}
 
       {(user.role === "admin" || user.role === "registrar") && <StaffDashboard role={user.role} />}
-      {user.role === "student" && <StudentDashboard />}
+      {user.role === "student" && <StudentDashboard user={user} />}
       {user.role === "faculty" && <FacultyDashboard user={user} />}
     </div>
   );
