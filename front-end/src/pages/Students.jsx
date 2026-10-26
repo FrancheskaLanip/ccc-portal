@@ -198,7 +198,7 @@ export default function Students() {
 
           {!editingId && (
             <div className="field">
-              <label>Email (used for Forgot password)</label>
+              <label>Email</label>
               <input type="email" name="email" value={form.email} onChange={change} required />
             </div>
           )}
