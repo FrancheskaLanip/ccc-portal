@@ -8,6 +8,11 @@ import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Programs from "./pages/Programs";
 import Users from "./pages/Users";
+import Subjects from "./pages/Subjects";
+import ClassSections from "./pages/ClassSections";
+import Enrollments from "./pages/Enrollments";
+import Announcements from "./pages/Announcements";
+import MyClasses from "./pages/MyClasses";
 import ChangePassword from "./pages/ChangePassword";
 
 export default function App() {
@@ -24,6 +29,11 @@ export default function App() {
           <Route path="/students" element={<Students />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/subjects" element={<Subjects />} />
+          <Route path="/class-sections" element={<ClassSections />} />
+          <Route path="/enrollments" element={<Enrollments />} />
+          <Route path="/announcements" element={<Announcements />} />
+          <Route path="/my-classes" element={<MyClasses />} />
           <Route path="/password/change" element={<ChangePassword />} />
         </Route>
 

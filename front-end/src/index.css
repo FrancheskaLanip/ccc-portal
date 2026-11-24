@@ -656,3 +656,26 @@ button.danger:hover { background: #912018; box-shadow: none; }
 
 th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: var(--blue-dark); }
+
+
+/* ---------- Added for subjects, class sections, enrollments, announcements and grades ---------- */
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  resize: vertical;
+}
+.field textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(47, 85, 212, .15); }
+.check-row { grid-column: 1 / -1; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+.check-row label { display: flex; gap: 6px; align-items: center; font-size: 14px; }
+.grade-input { width: 90px; padding: 6px 8px; border: 1.5px solid var(--border); border-radius: 8px; font: inherit; }
+.note { border-bottom: 1px solid var(--border); padding: 16px 0; }
+.note h3 { margin: 0 0 4px; color: var(--navy); }
+.note small { color: var(--muted); }
+.note p { white-space: pre-wrap; margin: 10px 0; }

@@ -102,12 +102,15 @@ function StaffDashboard({ role }) {
 
 function StudentDashboard({ user }) {
   const [student, setStudent] = useState(null);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api("/my-student")
-      .then((s) => setStudent(s))
-      .catch(() => {})
+    Promise.all([api("/my-student").catch(() => null), api("/my-subjects").catch(() => [])])
+      .then(([s, subs]) => {
+        setStudent(s);
+        setSubjects(subs || []);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -117,49 +120,96 @@ function StudentDashboard({ user }) {
   const enrolled = student.enrollment_status === "Enrolled";
 
   return (
-    <div className="panel-grid">
-      <section className="dash-panel">
-        <h3>My profile</h3>
-        <dl className="info-list">
-          <div>
-            <dt>Student number</dt>
-            <dd>{student.student_number}</dd>
-          </div>
-          <div>
-            <dt>Name</dt>
-            <dd>
-              {student.last_name}, {student.first_name}
-            </dd>
-          </div>
-          <div>
-            <dt>Email</dt>
-            <dd>{user.email || "-"}</dd>
-          </div>
-          <div>
-            <dt>Program</dt>
-            <dd>{student.program?.name || student.program?.code || "-"}</dd>
-          </div>
-          <div>
-            <dt>Class</dt>
-            <dd>{classOf(student) || "-"}</dd>
-          </div>
-          <div>
-            <dt>Contact number</dt>
-            <dd>{student.contact_number || "-"}</dd>
-          </div>
-        </dl>
-      </section>
+    <>
+      <div className="panel-grid">
+        <section className="dash-panel">
+          <h3>My profile</h3>
+          <dl className="info-list">
+            <div>
+              <dt>Student number</dt>
+              <dd>{student.student_number}</dd>
+            </div>
+            <div>
+              <dt>Name</dt>
+              <dd>
+                {student.last_name}, {student.first_name}
+              </dd>
+            </div>
+            <div>
+              <dt>Email</dt>
+              <dd>{user.email || "-"}</dd>
+            </div>
+            <div>
+              <dt>Program</dt>
+              <dd>{student.program?.name || student.program?.code || "-"}</dd>
+            </div>
+            <div>
+              <dt>Class</dt>
+              <dd>{classOf(student) || "-"}</dd>
+            </div>
+            <div>
+              <dt>Contact number</dt>
+              <dd>{student.contact_number || "-"}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <section className="dash-panel">
-        <h3>Enrollment status</h3>
-        <span className={"badge big " + (enrolled ? "good" : "warn")}>{student.enrollment_status}</span>
-        <p className="muted" style={{ marginTop: 14 }}>
-          {enrolled
-            ? "You are officially enrolled."
-            : "Please wait for the registrar to officially enroll you."}
-        </p>
+        <section className="dash-panel">
+          <h3>Enrollment status</h3>
+          <span className={"badge big " + (enrolled ? "good" : "warn")}>{student.enrollment_status}</span>
+          <p className="muted" style={{ marginTop: 14 }}>
+            {enrolled
+              ? "You are officially enrolled."
+              : "Please wait for the registrar to officially enroll you."}
+          </p>
+        </section>
+      </div>
+
+      <section className="dash-panel" style={{ marginTop: 18 }}>
+        <h3>My subjects</h3>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Units</th>
+                <th>Section</th>
+                <th>Term</th>
+                <th>Schedule</th>
+                <th>Faculty</th>
+                <th>Status</th>
+                <th>Grade</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {subjects.length === 0 && (
+                <tr>
+                  <td colSpan="9">You are not enrolled in any subject yet.</td>
+                </tr>
+              )}
+              {subjects.map((en) => (
+                <tr key={en.id}>
+                  <td>
+                    {en.class_section.subject.code} - {en.class_section.subject.title}
+                  </td>
+                  <td>{en.class_section.subject.units}</td>
+                  <td>{en.class_section.section_name}</td>
+                  <td>
+                    {en.class_section.school_year} {en.class_section.semester}
+                  </td>
+                  <td>{en.class_section.schedule}</td>
+                  <td>{en.class_section.faculty.name}</td>
+                  <td>{en.status}</td>
+                  <td>{en.grade?.grade ?? "-"}</td>
+                  <td>{en.grade?.remarks ?? "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
-    </div>
+    </>
   );
 }
 
@@ -185,8 +235,13 @@ function FacultyDashboard({ user }) {
       </section>
 
       <section className="dash-panel">
-        <h3>Notice</h3>
-        <p className="muted">Faculty features, such as class lists, are coming soon.</p>
+        <div className="dash-panel-head">
+          <h3>My classes</h3>
+          <Link to="/my-classes" className="dash-link">
+            Open my classes
+          </Link>
+        </div>
+        <p className="muted">See your class lists and encode grades.</p>
       </section>
     </div>
   );

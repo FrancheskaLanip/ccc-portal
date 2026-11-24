@@ -49,6 +49,16 @@ class StudentController extends Controller
         return $request->user()->student()->with('program')->first();
     }
 
+    // The logged-in student's subjects with schedule, faculty and grade (for the dashboard)
+    public function subjects(Request $request)
+    {
+        $student = $request->user()->student;
+
+        return $student
+            ? $student->enrollments()->with(['classSection.subject', 'classSection.faculty:id,name', 'grade'])->get()
+            : [];
+    }
+
     // CREATE: save a new student and their login account
     public function store(Request $request)
     {

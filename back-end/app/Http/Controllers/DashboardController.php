@@ -16,6 +16,11 @@ class DashboardController extends Controller
             ? $user->student()->with('program')->first()
             : null;
 
-        return view('dashboard', compact('student'));
+        // A student's subjects: each enrollment with its subject, faculty and grade
+        $enrollments = $student
+            ? $student->enrollments()->with(['classSection.subject', 'classSection.faculty', 'grade'])->get()
+            : collect();
+
+        return view('dashboard', compact('student', 'enrollments'));
     }
 }

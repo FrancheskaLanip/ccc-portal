@@ -15,4 +15,10 @@ class Program extends Model
     {
         return $this->hasMany(Student::class);
     }
+
+    // Many-to-many: a program has many subjects (pivot table program_subject)
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class)->withPivot('year_level')->withTimestamps();
+    }
 }

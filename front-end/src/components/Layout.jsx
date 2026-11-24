@@ -40,6 +40,37 @@ function Icon({ name }) {
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </>
     ),
+    subjects: (
+      <>
+        <path d="M8 6h13" />
+        <path d="M8 12h13" />
+        <path d="M8 18h13" />
+        <path d="M3 6h.01" />
+        <path d="M3 12h.01" />
+        <path d="M3 18h.01" />
+      </>
+    ),
+    calendar: (
+      <>
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M16 2v4" />
+        <path d="M8 2v4" />
+        <path d="M3 10h18" />
+      </>
+    ),
+    clipboard: (
+      <>
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+        <path d="M9 14l2 2 4-4" />
+      </>
+    ),
+    bell: (
+      <>
+        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+      </>
+    ),
     menu: (
       <>
         <path d="M3 6h18" />
@@ -69,13 +100,18 @@ const DASH = { to: "/dashboard", label: "Dashboard", icon: "dashboard" };
 const STUDENTS = { to: "/students", label: "Students", icon: "students" };
 const PROGRAMS = { to: "/programs", label: "Programs", icon: "programs" };
 const USERS = { to: "/users", label: "Users", icon: "users" };
+const SUBJECTS = { to: "/subjects", label: "Subjects", icon: "subjects" };
+const SECTIONS = { to: "/class-sections", label: "Class Sections", icon: "calendar" };
+const ENROLLMENTS = { to: "/enrollments", label: "Enrollments", icon: "clipboard" };
+const CLASSES = { to: "/my-classes", label: "My Classes", icon: "calendar" };
+const ANNOUNCEMENTS = { to: "/announcements", label: "Announcements", icon: "bell" };
 const PASSWORD = { to: "/password/change", label: "Change password", icon: "password" };
 
 const MENU = {
-  student: [DASH],
-  faculty: [DASH],
-  registrar: [DASH, STUDENTS, PROGRAMS],
-  admin: [DASH, STUDENTS, PROGRAMS, USERS],
+  student: [DASH, ANNOUNCEMENTS],
+  faculty: [DASH, CLASSES, ANNOUNCEMENTS],
+  registrar: [DASH, STUDENTS, PROGRAMS, SUBJECTS, SECTIONS, ENROLLMENTS, ANNOUNCEMENTS],
+  admin: [DASH, STUDENTS, PROGRAMS, SUBJECTS, SECTIONS, ENROLLMENTS, USERS, ANNOUNCEMENTS],
 };
 
 export default function Layout() {

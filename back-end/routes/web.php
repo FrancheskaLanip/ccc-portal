@@ -3,12 +3,17 @@
 // ROUTES: this file maps each URL to the code that handles it.
 // Flow of a request: route -> middleware -> controller -> model -> view.
 
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClassSectionController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\GradeController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -46,13 +51,32 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin', fn () => view('admin'))
         ->middleware('role:admin')->name('admin');
 
-    // Admin and registrar: manage programs and students (full CRUD)
+    // Everyone logged in can read announcements (what they see is filtered by the database)
+    Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+
+    // Admin and registrar: manage programs, students, subjects, class sections, enrollments and announcements
     Route::middleware('role:admin,registrar')->group(function () {
         // resource() creates index, create, store, edit, update, destroy routes at once
         Route::resource('programs', ProgramController::class)->except('show');
         Route::resource('students', StudentController::class)->except('show');
         // Registrar confirms that a student is officially enrolled
         Route::patch('/students/{student}/enroll', [StudentController::class, 'enroll'])->name('students.enroll');
+
+        // Subjects and class sections (one page each: list + add/edit form)
+        Route::resource('subjects', SubjectController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('class-sections', ClassSectionController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Enrollments: enroll a student in a section, drop or re-enroll
+        Route::resource('enrollments', EnrollmentController::class)->only(['index', 'store', 'update']);
+
+        // Post, edit and delete announcements
+        Route::resource('announcements', AnnouncementController::class)->only(['store', 'update', 'destroy']);
+    });
+
+    // Faculty only: see my own classes and encode grades
+    Route::middleware('role:faculty')->group(function () {
+        Route::get('/my-classes', [GradeController::class, 'index'])->name('my-classes');
+        Route::put('/grades/{grade}', [GradeController::class, 'update'])->name('grades.update');
     });
 
     // Admin only: manage user accounts (list, create, delete)
@@ -77,15 +101,34 @@ Route::prefix('api')->group(function () {
         Route::post('/password/change', [Api\AuthController::class, 'changePassword']);
         Route::get('/my-student', [Api\StudentController::class, 'mine']);   // a student's own record
 
+        // Everyone logged in can read announcements (the database filters what each role sees)
+        Route::get('/announcements', [Api\AnnouncementController::class, 'index'])->name('api.announcements.index');
+
+        // Student only: my subjects with schedule and grades
+        Route::get('/my-subjects', [Api\StudentController::class, 'subjects'])->middleware('role:student');
+
+        // Faculty only: my classes and grade encoding
+        Route::middleware('role:faculty')->group(function () {
+            Route::get('/my-classes', [Api\GradeController::class, 'myClasses']);
+            Route::get('/my-classes/{section}', [Api\GradeController::class, 'classList']);
+            Route::put('/grades/{grade}', [Api\GradeController::class, 'update']);
+        });
+
         // Admin and registrar only
         Route::middleware('role:admin,registrar')->group(function () {
             // apiResource() = index, store, show, update, destroy (JSON, no HTML forms)
-            Route::apiResource('programs', Api\ProgramController::class);
-            Route::apiResource('students', Api\StudentController::class);
+            Route::apiResource('programs', Api\ProgramController::class)->names('api.programs');
+            Route::apiResource('students', Api\StudentController::class)->names('api.students');
             Route::patch('/students/{student}/enroll', [Api\StudentController::class, 'enroll']);
+
+            Route::apiResource('subjects', Api\SubjectController::class)->except('show')->names('api.subjects');
+            Route::apiResource('class-sections', Api\ClassSectionController::class)->except('show')->names('api.class-sections');
+            Route::get('/faculty', [Api\ClassSectionController::class, 'faculty']);
+            Route::apiResource('enrollments', Api\EnrollmentController::class)->only(['index', 'store', 'update'])->names('api.enrollments');
+            Route::apiResource('announcements', Api\AnnouncementController::class)->only(['store', 'update', 'destroy'])->names('api.announcements');
         });
 
         // Admin only
-        Route::middleware('role:admin')->apiResource('users', Api\UserController::class)->only(['index', 'store', 'destroy']);
+        Route::middleware('role:admin')->apiResource('users', Api\UserController::class)->only(['index', 'store', 'destroy'])->names('api.users');
     });
 });
