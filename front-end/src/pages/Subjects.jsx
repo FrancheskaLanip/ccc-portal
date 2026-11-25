@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, errorText } from "../csrf";
 
 const EMPTY = { code: "", title: "", units: 3, programs: [] };
 
 export default function Subjects() {
+  // The page shown is kept in the address: /subjects (list), /subjects?new=1 (add), /subjects?edit=5 (edit)
+  const [params, setParams] = useSearchParams();
+  const editId = params.get("edit");
+  const isNew = params.get("new") === "1";
+  const showForm = isNew || Boolean(editId);
+
   const [subjects, setSubjects] = useState([]);
   const [programs, setPrograms] = useState([]);
-  const [form, setForm] = useState(null); // null = form hidden
-  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,6 +35,18 @@ export default function Subjects() {
     load();
   }, []);
 
+  // Fill the form when the add or edit page opens
+  useEffect(() => {
+    if (isNew) {
+      setForm({ ...EMPTY, programs: [] });
+    } else if (editId) {
+      const s = subjects.find((x) => String(x.id) === String(editId));
+      setForm(s ? { code: s.code, title: s.title, units: s.units, programs: s.programs.map((p) => p.id) } : null);
+    } else {
+      setForm(null);
+    }
+  }, [isNew, editId, subjects]);
+
   function clearNotices() {
     setMessage("");
     setError("");
@@ -36,19 +54,17 @@ export default function Subjects() {
 
   function openAdd() {
     clearNotices();
-    setEditingId(null);
-    setForm({ ...EMPTY, programs: [] });
+    setParams({ new: 1 });
   }
 
   function openEdit(s) {
     clearNotices();
-    setEditingId(s.id);
-    setForm({ code: s.code, title: s.title, units: s.units, programs: s.programs.map((p) => p.id) });
+    setParams({ edit: s.id });
   }
 
-  function closeForm() {
-    setForm(null);
-    setEditingId(null);
+  function back() {
+    clearNotices();
+    setParams({});
   }
 
   function change(e) {
@@ -67,15 +83,15 @@ export default function Subjects() {
     setBusy(true);
 
     try {
-      if (editingId) {
-        await api("/subjects/" + editingId, { method: "PUT", body: form });
+      if (editId) {
+        await api("/subjects/" + editId, { method: "PUT", body: form });
         setMessage("Subject updated.");
       } else {
         await api("/subjects", { method: "POST", body: form });
         setMessage("Subject added.");
       }
-      closeForm();
       await load();
+      setParams({}); // back to the list
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -95,55 +111,72 @@ export default function Subjects() {
     }
   }
 
+  // ---------- Page 2: the add / edit form ----------
+  if (showForm) {
+    return (
+      <div>
+        <div className="page-head">
+          <h1>{editId ? "Edit subject" : "Add subject"}</h1>
+          <button className="light" onClick={back}>
+            Back to Subjects
+          </button>
+        </div>
+
+        {error && <div className="alert">{error}</div>}
+
+        {!form ? (
+          <p>{loading ? "Loading..." : "Subject not found."}</p>
+        ) : (
+          <form className="form-panel" onSubmit={save}>
+            <div className="field">
+              <label>Code</label>
+              <input name="code" value={form.code} onChange={change} maxLength={20} required />
+            </div>
+
+            <div className="field">
+              <label>Title</label>
+              <input name="title" value={form.title} onChange={change} maxLength={255} required />
+            </div>
+
+            <div className="field">
+              <label>Units (1 to 6)</label>
+              <input name="units" type="number" min="1" max="6" value={form.units} onChange={change} required />
+            </div>
+
+            <div className="check-row">
+              <strong>Offered by:</strong>
+              {programs.map((p) => (
+                <label key={p.id}>
+                  <input type="checkbox" checked={form.programs.includes(p.id)} onChange={() => toggleProgram(p.id)} />
+                  {p.code}
+                </label>
+              ))}
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={busy}>
+                {busy ? "Saving..." : "Save"}
+              </button>
+              <button type="button" className="light" onClick={back}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- Page 1: the list ----------
   return (
     <div>
       <div className="page-head">
         <h1>Subjects</h1>
-        {!form && <button onClick={openAdd}>Add subject</button>}
+        <button onClick={openAdd}>Add subject</button>
       </div>
 
       {message && <div className="success">{message}</div>}
       {error && <div className="alert">{error}</div>}
-
-      {form && (
-        <form className="form-panel" onSubmit={save}>
-          <h2>{editingId ? "Edit subject" : "Add subject"}</h2>
-
-          <div className="field">
-            <label>Code</label>
-            <input name="code" value={form.code} onChange={change} maxLength={20} required />
-          </div>
-
-          <div className="field">
-            <label>Title</label>
-            <input name="title" value={form.title} onChange={change} maxLength={255} required />
-          </div>
-
-          <div className="field">
-            <label>Units (1 to 6)</label>
-            <input name="units" type="number" min="1" max="6" value={form.units} onChange={change} required />
-          </div>
-
-          <div className="check-row">
-            <strong>Offered by:</strong>
-            {programs.map((p) => (
-              <label key={p.id}>
-                <input type="checkbox" checked={form.programs.includes(p.id)} onChange={() => toggleProgram(p.id)} />
-                {p.code}
-              </label>
-            ))}
-          </div>
-
-          <div className="actions">
-            <button type="submit" disabled={busy}>
-              {busy ? "Saving..." : "Save"}
-            </button>
-            <button type="button" className="light" onClick={closeForm}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
 
       {loading ? (
         <p>Loading...</p>

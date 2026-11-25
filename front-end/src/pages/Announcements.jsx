@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, errorText } from "../csrf";
 
 const EMPTY = { title: "", body: "", audience: "all" };
@@ -8,9 +9,14 @@ export default function Announcements() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const isStaff = user.role === "admin" || user.role === "registrar";
 
+  // /announcements (list), /announcements?new=1 (post), /announcements?edit=5 (edit). Only staff see the form.
+  const [params, setParams] = useSearchParams();
+  const editId = params.get("edit");
+  const isNew = params.get("new") === "1";
+  const showForm = isStaff && (isNew || Boolean(editId));
+
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState(null); // null = form hidden
-  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -30,6 +36,18 @@ export default function Announcements() {
     load();
   }, []);
 
+  // Fill the form when the post or edit page opens
+  useEffect(() => {
+    if (isNew) {
+      setForm({ ...EMPTY });
+    } else if (editId) {
+      const a = items.find((x) => String(x.id) === String(editId));
+      setForm(a ? { title: a.title, body: a.body, audience: a.audience } : null);
+    } else {
+      setForm(null);
+    }
+  }, [isNew, editId, items]);
+
   function clearNotices() {
     setMessage("");
     setError("");
@@ -37,19 +55,17 @@ export default function Announcements() {
 
   function openAdd() {
     clearNotices();
-    setEditingId(null);
-    setForm({ ...EMPTY });
+    setParams({ new: 1 });
   }
 
   function openEdit(a) {
     clearNotices();
-    setEditingId(a.id);
-    setForm({ title: a.title, body: a.body, audience: a.audience });
+    setParams({ edit: a.id });
   }
 
-  function closeForm() {
-    setForm(null);
-    setEditingId(null);
+  function back() {
+    clearNotices();
+    setParams({});
   }
 
   function change(e) {
@@ -62,15 +78,15 @@ export default function Announcements() {
     setBusy(true);
 
     try {
-      if (editingId) {
-        await api("/announcements/" + editingId, { method: "PUT", body: form });
+      if (editId) {
+        await api("/announcements/" + editId, { method: "PUT", body: form });
         setMessage("Announcement updated.");
       } else {
         await api("/announcements", { method: "POST", body: form });
         setMessage("Announcement posted.");
       }
-      closeForm();
       await load();
+      setParams({}); // back to the list
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -90,51 +106,68 @@ export default function Announcements() {
     }
   }
 
+  // ---------- Page 2: the post / edit form (staff only) ----------
+  if (showForm) {
+    return (
+      <div>
+        <div className="page-head">
+          <h1>{editId ? "Edit announcement" : "Post an announcement"}</h1>
+          <button className="light" onClick={back}>
+            Back to Announcements
+          </button>
+        </div>
+
+        {error && <div className="alert">{error}</div>}
+
+        {!form ? (
+          <p>{loading ? "Loading..." : "Announcement not found."}</p>
+        ) : (
+          <form className="form-panel" onSubmit={save}>
+            <div className="field">
+              <label>Title</label>
+              <input name="title" value={form.title} onChange={change} maxLength={255} required />
+            </div>
+
+            <div className="field">
+              <label>For</label>
+              <select name="audience" value={form.audience} onChange={change}>
+                {Object.entries(AUDIENCE).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="field" style={{ gridColumn: "1 / -1" }}>
+              <label>Message</label>
+              <textarea name="body" value={form.body} onChange={change} rows={5} maxLength={5000} required />
+            </div>
+
+            <div className="actions">
+              <button type="submit" disabled={busy}>
+                {busy ? "Saving..." : "Save"}
+              </button>
+              <button type="button" className="light" onClick={back}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- Page 1: the list ----------
   return (
     <div>
       <div className="page-head">
         <h1>Announcements</h1>
-        {isStaff && !form && <button onClick={openAdd}>Post an announcement</button>}
+        {isStaff && <button onClick={openAdd}>Post an announcement</button>}
       </div>
 
       {message && <div className="success">{message}</div>}
       {error && <div className="alert">{error}</div>}
-
-      {isStaff && form && (
-        <form className="form-panel" onSubmit={save}>
-          <h2>{editingId ? "Edit announcement" : "Post an announcement"}</h2>
-
-          <div className="field">
-            <label>Title</label>
-            <input name="title" value={form.title} onChange={change} maxLength={255} required />
-          </div>
-
-          <div className="field">
-            <label>For</label>
-            <select name="audience" value={form.audience} onChange={change}>
-              {Object.entries(AUDIENCE).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field" style={{ gridColumn: "1 / -1" }}>
-            <label>Message</label>
-            <textarea name="body" value={form.body} onChange={change} rows={4} maxLength={5000} required />
-          </div>
-
-          <div className="actions">
-            <button type="submit" disabled={busy}>
-              {busy ? "Saving..." : "Save"}
-            </button>
-            <button type="button" className="light" onClick={closeForm}>
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
 
       {loading ? (
         <p>Loading...</p>

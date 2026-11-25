@@ -1,10 +1,13 @@
-{{-- ENROLLMENTS: enroll form + list of all enrollments. --}}
+{{-- ENROLLMENTS: /enrollments = list, ?create=1 = enroll form. --}}
 @extends('layouts.app')
 @section('title', 'Enrollments')
 @section('content')
-    <h1>Enrollments</h1>
+@if (request()->has('create'))
 
-    <h2>Enroll a student</h2>
+    {{-- PAGE 2: form only --}}
+    <h1>Enroll a student</h1>
+    <p><a href="{{ route('enrollments.index') }}">&larr; Back to Enrollments</a></p>
+
     <form method="POST" action="{{ route('enrollments.store') }}">
         @csrf
         <label>Student
@@ -30,13 +33,18 @@
         </label><br>
 
         <button type="submit">Enroll</button>
+        <a href="{{ route('enrollments.index') }}">Cancel</a>
     </form>
 
-    <hr>
+@else
+
+    {{-- PAGE 1: list only --}}
+    <h1>Enrollments</h1>
+    <p><a href="{{ route('enrollments.index', ['create' => 1]) }}">+ Enroll a student</a></p>
 
     <table border="1" cellpadding="6">
         <tr>
-            <th>Student</th><th>Subject</th><th>Section</th><th>Term</th>
+            <th>Student</th><th>Subject</th><th>Section</th><th>Term</th><th>Schedule</th>
             <th>Faculty</th><th>Status</th><th>Grade</th><th>Remarks</th><th>Action</th>
         </tr>
         @forelse ($enrollments as $enrollment)
@@ -45,12 +53,12 @@
                 <td>{{ $enrollment->classSection->subject->code }}</td>
                 <td>{{ $enrollment->classSection->section_name }}</td>
                 <td>{{ $enrollment->classSection->school_year }} {{ $enrollment->classSection->semester }}</td>
+                <td>{{ $enrollment->classSection->schedule }}</td>
                 <td>{{ $enrollment->classSection->faculty->name }}</td>
                 <td>{{ $enrollment->status }}</td>
                 <td>{{ $enrollment->grade?->grade ?? '-' }}</td>
                 <td>{{ $enrollment->grade?->remarks ?? '-' }}</td>
                 <td>
-                    {{-- One small form: sends the opposite status --}}
                     <form method="POST" action="{{ route('enrollments.update', $enrollment) }}" style="display:inline"
                           onsubmit="return confirm('Are you sure?')">
                         @csrf
@@ -66,7 +74,9 @@
                 </td>
             </tr>
         @empty
-            <tr><td colspan="9">No enrollments yet.</td></tr>
+            <tr><td colspan="10">No enrollments yet.</td></tr>
         @endforelse
     </table>
+
+@endif
 @endsection

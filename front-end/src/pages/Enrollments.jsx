@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, errorText } from "../csrf";
 
 export default function Enrollments() {
+  // /enrollments (list), /enrollments?new=1 (enroll form)
+  const [params, setParams] = useSearchParams();
+  const showForm = params.get("new") === "1";
+
   const [enrollments, setEnrollments] = useState([]);
   const [students, setStudents] = useState([]);
   const [sections, setSections] = useState([]);
@@ -33,6 +38,17 @@ export default function Enrollments() {
     setError("");
   }
 
+  function openForm() {
+    clearNotices();
+    setForm({ student_id: "", class_section_id: "" });
+    setParams({ new: 1 });
+  }
+
+  function back() {
+    clearNotices();
+    setParams({});
+  }
+
   function change(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
@@ -47,6 +63,7 @@ export default function Enrollments() {
       await api("/enrollments", { method: "POST", body: form });
       setMessage("Student enrolled.");
       await load();
+      setParams({}); // back to the list
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -67,48 +84,67 @@ export default function Enrollments() {
     }
   }
 
+  // ---------- Page 2: the enroll form ----------
+  if (showForm) {
+    return (
+      <div>
+        <div className="page-head">
+          <h1>Enroll a student</h1>
+          <button className="light" onClick={back}>
+            Back to Enrollments
+          </button>
+        </div>
+
+        {error && <div className="alert">{error}</div>}
+
+        <form className="form-panel" onSubmit={enroll}>
+          <div className="field">
+            <label>Student</label>
+            <select name="student_id" value={form.student_id} onChange={change} required>
+              <option value="">Choose a student</option>
+              {students.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.student_number} - {s.last_name}, {s.first_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+            <label>Class section</label>
+            <select name="class_section_id" value={form.class_section_id} onChange={change} required>
+              <option value="">Choose a class section</option>
+              {sections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.subject.code}-{c.section_name} ({c.school_year} {c.semester}) {c.enrolled_count}/{c.max_students} seats
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="actions">
+            <button type="submit" disabled={busy}>
+              {busy ? "Enrolling..." : "Enroll"}
+            </button>
+            <button type="button" className="light" onClick={back}>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // ---------- Page 1: the list ----------
   return (
     <div>
       <div className="page-head">
         <h1>Enrollments</h1>
+        <button onClick={openForm}>Enroll a student</button>
       </div>
 
       {message && <div className="success">{message}</div>}
       {error && <div className="alert">{error}</div>}
-
-      <form className="form-panel" onSubmit={enroll}>
-        <h2>Enroll a student</h2>
-
-        <div className="field">
-          <label>Student</label>
-          <select name="student_id" value={form.student_id} onChange={change} required>
-            <option value="">Choose a student</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.student_number} - {s.last_name}, {s.first_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="field">
-          <label>Class section</label>
-          <select name="class_section_id" value={form.class_section_id} onChange={change} required>
-            <option value="">Choose a class section</option>
-            {sections.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.subject.code}-{c.section_name} ({c.school_year} {c.semester}) {c.enrolled_count}/{c.max_students} seats
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="actions">
-          <button type="submit" disabled={busy}>
-            {busy ? "Enrolling..." : "Enroll"}
-          </button>
-        </div>
-      </form>
 
       {loading ? (
         <p>Loading...</p>

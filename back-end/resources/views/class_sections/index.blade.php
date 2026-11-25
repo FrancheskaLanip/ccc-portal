@@ -1,10 +1,13 @@
-{{-- CLASS SECTIONS: list + add/edit form on one page. $editing is the section being edited (or null). --}}
+{{-- CLASS SECTIONS: /class-sections = list, ?create=1 = add form, ?edit=ID = edit form. --}}
 @extends('layouts.app')
 @section('title', 'Class Sections')
 @section('content')
-    <h1>Class Sections</h1>
+@if ($editing || request()->has('create'))
 
-    <h2>{{ $editing ? 'Edit class section' : 'Add class section' }}</h2>
+    {{-- PAGE 2: form only --}}
+    <h1>{{ $editing ? 'Edit class section' : 'Add class section' }}</h1>
+    <p><a href="{{ route('class-sections.index') }}">&larr; Back to Class Sections</a></p>
+
     <form method="POST" action="{{ $editing ? route('class-sections.update', $editing) : route('class-sections.store') }}">
         @csrf
         @if ($editing) @method('PUT') @endif
@@ -51,16 +54,19 @@
                 @endforeach
             </select>
         </label><br>
-        {{-- substr(..., 0, 5) turns 08:00:00 into 08:00 --}}
         <label>Start time <input type="time" name="start_time" value="{{ old('start_time', $editing?->start_time ? substr($editing->start_time, 0, 5) : '') }}"></label><br>
         <label>End time <input type="time" name="end_time" value="{{ old('end_time', $editing?->end_time ? substr($editing->end_time, 0, 5) : '') }}"></label><br>
         <label>Room <input type="text" name="room" value="{{ old('room', $editing?->room) }}"></label><br>
 
         <button type="submit">Save</button>
-        @if ($editing) <a href="{{ route('class-sections.index') }}">Cancel</a> @endif
+        <a href="{{ route('class-sections.index') }}">Cancel</a>
     </form>
 
-    <hr>
+@else
+
+    {{-- PAGE 1: list only --}}
+    <h1>Class Sections</h1>
+    <p><a href="{{ route('class-sections.index', ['create' => 1]) }}">+ Add class section</a></p>
 
     <table border="1" cellpadding="6">
         <tr><th>Subject</th><th>Section</th><th>School year</th><th>Semester</th><th>Schedule</th><th>Faculty</th><th>Seats</th><th>Actions</th></tr>
@@ -70,10 +76,8 @@
                 <td>{{ $section->section_name }}</td>
                 <td>{{ $section->school_year }}</td>
                 <td>{{ $section->semester }}</td>
-                {{-- schedule comes from getScheduleAttribute() in the ClassSection model --}}
                 <td>{{ $section->schedule }}</td>
                 <td>{{ $section->faculty->name }}</td>
-                {{-- enrolled_count comes from withCount() in the controller --}}
                 <td>{{ $section->enrolled_count }} / {{ $section->max_students }}</td>
                 <td>
                     <a href="{{ route('class-sections.index', ['edit' => $section->id]) }}">Edit</a>
@@ -89,4 +93,6 @@
             <tr><td colspan="8">No class sections yet.</td></tr>
         @endforelse
     </table>
+
+@endif
 @endsection

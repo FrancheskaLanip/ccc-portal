@@ -1,10 +1,13 @@
-{{-- SUBJECTS: list + add/edit form on one page. $editing is the subject being edited (or null). --}}
+{{-- SUBJECTS: two pages in one file. /subjects = list, ?create=1 = add form, ?edit=ID = edit form. --}}
 @extends('layouts.app')
 @section('title', 'Subjects')
 @section('content')
-    <h1>Subjects</h1>
+@if ($editing || request()->has('create'))
 
-    <h2>{{ $editing ? 'Edit subject' : 'Add subject' }}</h2>
+    {{-- PAGE 2: form only --}}
+    <h1>{{ $editing ? 'Edit subject' : 'Add subject' }}</h1>
+    <p><a href="{{ route('subjects.index') }}">&larr; Back to Subjects</a></p>
+
     <form method="POST" action="{{ $editing ? route('subjects.update', $editing) : route('subjects.store') }}">
         @csrf
         @if ($editing) @method('PUT') @endif
@@ -15,7 +18,6 @@
 
         <p>Offered by these programs:</p>
         @foreach ($programs as $program)
-            {{-- Checked if it was checked before an error (old) or is already linked ($linked) --}}
             <label>
                 <input type="checkbox" name="programs[]" value="{{ $program->id }}"
                     {{ in_array($program->id, old('programs', $linked)) ? 'checked' : '' }}>
@@ -24,10 +26,14 @@
         @endforeach
 
         <button type="submit">Save</button>
-        @if ($editing) <a href="{{ route('subjects.index') }}">Cancel</a> @endif
+        <a href="{{ route('subjects.index') }}">Cancel</a>
     </form>
 
-    <hr>
+@else
+
+    {{-- PAGE 1: list only --}}
+    <h1>Subjects</h1>
+    <p><a href="{{ route('subjects.index', ['create' => 1]) }}">+ Add subject</a></p>
 
     <table border="1" cellpadding="6">
         <tr><th>Code</th><th>Title</th><th>Units</th><th>Programs</th><th>Actions</th></tr>
@@ -36,10 +42,8 @@
                 <td>{{ $subject->code }}</td>
                 <td>{{ $subject->title }}</td>
                 <td>{{ $subject->units }}</td>
-                {{-- pluck('code') gets the program codes, join() puts commas between them --}}
                 <td>{{ $subject->programs->pluck('code')->join(', ') ?: '-' }}</td>
                 <td>
-                    {{-- ?edit=ID reloads this page with the form filled in --}}
                     <a href="{{ route('subjects.index', ['edit' => $subject->id]) }}">Edit</a>
                     <form method="POST" action="{{ route('subjects.destroy', $subject) }}" style="display:inline"
                           onsubmit="return confirm('Delete this subject?')">
@@ -53,4 +57,6 @@
             <tr><td colspan="5">No subjects yet.</td></tr>
         @endforelse
     </table>
-@endsection
+
+@endif
+@endsections
